@@ -31,7 +31,7 @@ jobs:
             exit 1
           }
           git diff --check
-          if git grep -nE '^(<<<<<<<|=======|>>>>>>>)' -- ':!*.lock'; then
+          if git grep -nE '^(<<<<<<< .+|=======$|>>>>>>> .+)$' -- ':!*.lock'; then
             echo '::error::Merge conflict markers detected.'
             exit 1
           fi
