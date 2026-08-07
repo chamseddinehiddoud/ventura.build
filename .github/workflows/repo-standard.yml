@@ -34,7 +34,7 @@ jobs:
           output: trivy-results.sarif
           severity: HIGH,CRITICAL
           ignore-unfixed: true
-          exit-code: '0'
+          exit-code: '1'
 
       - name: Upload security findings
         if: always()
@@ -43,6 +43,7 @@ jobs:
           sarif_file: trivy-results.sarif
 
       - name: Generate SPDX SBOM
+        if: always()
         uses: anchore/sbom-action@v0
         with:
           path: .
@@ -50,6 +51,7 @@ jobs:
           output-file: sbom.spdx.json
 
       - name: Upload SBOM
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: sbom-${{ github.repository_id }}-${{ github.sha }}
