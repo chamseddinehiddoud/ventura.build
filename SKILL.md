@@ -1,5 +1,9 @@
 # Skill: ventura.build — LOOP Skill Engine / Deterministic Replay
 
+![EPL-2.0](https://img.shields.io/github/license/chamseddinehiddoud/ventura.build)
+![stars](https://img.shields.io/github/stars/chamseddinehiddoud/ventura.build)
+![forks](https://img.shields.io/github/forks/chamseddinehiddoud/ventura.build)
+
 Skill de aprendizado por reconstrução de ferramentas com **execução
 determinística**: explore o projeto uma vez, compile o plano de construção,
 replique etapa por etapa com ~zero tokens, regenere quando a arquitetura
