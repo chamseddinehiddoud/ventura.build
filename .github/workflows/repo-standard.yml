@@ -25,6 +25,91 @@ jobs:
             exit 1
           fi
 
+      - name: Validate Agent Skills
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+          import sys
+
+          root = Path('.github/skills')
+          if not root.exists():
+              print('No project Agent Skills found; skipping.')
+              raise SystemExit(0)
+
+          errors = []
+          seen_names = set()
+          seen_descriptions = {}
+          skill_files = sorted(root.glob('*/SKILL.md'))
+
+          if not skill_files:
+              errors.append('.github/skills exists but contains no */SKILL.md files')
+
+          for skill_file in skill_files:
+              text = skill_file.read_text(encoding='utf-8')
+              lines = text.splitlines()
+              rel = skill_file.as_posix()
+
+              if not lines or lines[0].strip() != '---':
+                  errors.append(f'{rel}: missing opening YAML frontmatter delimiter')
+                  continue
+
+              try:
+                  close = next(i for i, line in enumerate(lines[1:], start=1) if line.strip() == '---')
+              except StopIteration:
+                  errors.append(f'{rel}: missing closing YAML frontmatter delimiter')
+                  continue
+
+              frontmatter = lines[1:close]
+              body = lines[close + 1:]
+              fields = {}
+              for line in frontmatter:
+                  if ':' not in line:
+                      continue
+                  key, value = line.split(':', 1)
+                  fields[key.strip()] = value.strip()
+
+              name = fields.get('name', '')
+              description = fields.get('description', '')
+              folder = skill_file.parent.name
+
+              if not (2 <= len(name) <= 64 and re.fullmatch(r'[a-z0-9]+(?:-[a-z0-9]+)*', name)):
+                  errors.append(f'{rel}: invalid kebab-case name or length')
+              if name != folder:
+                  errors.append(f'{rel}: frontmatter name must equal folder name {folder}')
+              if name in seen_names:
+                  errors.append(f'{rel}: duplicate skill name {name}')
+              seen_names.add(name)
+
+              if not description:
+                  errors.append(f'{rel}: description is required')
+              else:
+                  low = description.lower()
+                  if ': ' in description:
+                      errors.append(f'{rel}: description must not contain colon-space')
+                  if '<' in description or '>' in description:
+                      errors.append(f'{rel}: description must not contain angle brackets')
+                  if 'use when' not in low:
+                      errors.append(f'{rel}: description must state when to use')
+                  if 'do not use when' not in low:
+                      errors.append(f'{rel}: description must state when not to use')
+                  if description in seen_descriptions:
+                      errors.append(f'{rel}: duplicate description also used by {seen_descriptions[description]}')
+                  seen_descriptions[description] = rel
+
+              if not any(line.strip() for line in body):
+                  errors.append(f'{rel}: Markdown body is empty')
+              if len(body) > 200:
+                  errors.append(f'{rel}: body exceeds 200 lines')
+
+          if errors:
+              print('Agent Skill validation failed:')
+              for error in errors:
+                  print(f'- {error}')
+              sys.exit(1)
+
+          print(f'Validated {len(skill_files)} Agent Skill files.')
+
       - name: Scan repository for HIGH/CRITICAL vulnerabilities
         uses: aquasecurity/trivy-action@v0.36.0
         with:
