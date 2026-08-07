@@ -110,6 +110,73 @@ jobs:
 
           print(f'Validated {len(skill_files)} Agent Skill files.')
 
+      - name: Validate Agent Connector Manifest
+        shell: python
+        run: |
+          from pathlib import Path
+          import json
+          import sys
+
+          skills_root = Path('.github/skills')
+          manifest_path = Path('.github/agent/connectors.json')
+          if not skills_root.exists():
+              print('No project Agent Skills found; connector manifest optional.')
+              raise SystemExit(0)
+          if not manifest_path.exists():
+              print('No connector manifest found; skipping connector routing validation.')
+              raise SystemExit(0)
+
+          errors = []
+          try:
+              manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
+          except Exception as exc:
+              print(f'Invalid connector manifest JSON: {exc}')
+              raise SystemExit(1)
+
+          catalog = manifest.get('catalog', {})
+          routes = manifest.get('routes', {})
+          max_active = manifest.get('max_active_connectors_per_skill', 6)
+          skill_names = {p.parent.name for p in skills_root.glob('*/SKILL.md')}
+
+          if not isinstance(max_active, int) or not 1 <= max_active <= 8:
+              errors.append('max_active_connectors_per_skill must be an integer between 1 and 8')
+          if not isinstance(catalog, dict) or not catalog:
+              errors.append('catalog must be a non-empty object')
+          if not isinstance(routes, dict) or not routes:
+              errors.append('routes must be a non-empty object')
+
+          allowed_trust = {'official', 'native', 'local'}
+          for name, spec in catalog.items():
+              if not isinstance(spec, dict):
+                  errors.append(f'catalog.{name} must be an object')
+                  continue
+              if spec.get('trust') not in allowed_trust:
+                  errors.append(f'catalog.{name}.trust must be official native or local')
+              if not spec.get('purpose'):
+                  errors.append(f'catalog.{name}.purpose is required')
+
+          for skill, connectors in routes.items():
+              if skill not in skill_names:
+                  errors.append(f'route {skill} has no matching .github/skills/{skill}/SKILL.md')
+              if not isinstance(connectors, list) or not connectors:
+                  errors.append(f'route {skill} must contain at least one connector')
+                  continue
+              if len(connectors) > max_active:
+                  errors.append(f'route {skill} exceeds max_active_connectors_per_skill={max_active}')
+              if len(connectors) != len(set(connectors)):
+                  errors.append(f'route {skill} contains duplicate connectors')
+              for connector in connectors:
+                  if connector not in catalog:
+                      errors.append(f'route {skill} references unknown connector {connector}')
+
+          if errors:
+              print('Agent Connector Manifest validation failed:')
+              for error in errors:
+                  print(f'- {error}')
+              sys.exit(1)
+
+          print(f'Validated {len(catalog)} connectors across {len(routes)} routed skills.')
+
       - name: Scan repository for HIGH/CRITICAL vulnerabilities
         uses: aquasecurity/trivy-action@v0.36.0
         with:
