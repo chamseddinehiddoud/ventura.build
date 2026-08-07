@@ -1,0 +1,57 @@
+name: Ventura Repository Standard
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  repository-baseline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate repository hygiene
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s README.md
+          git diff --check
+          if git grep -nE '^(<<<<<<<|=======|>>>>>>>)' -- ':!*.lock'; then
+            echo 'Merge conflict markers detected.' >&2
+            exit 1
+          fi
+
+      - name: Scan repository for HIGH/CRITICAL vulnerabilities
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: sarif
+          output: trivy-results.sarif
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: '0'
+
+      - name: Upload security findings
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-results.sarif
+
+      - name: Generate SPDX SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: spdx-json
+          output-file: sbom.spdx.json
+
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-${{ github.repository_id }}-${{ github.sha }}
+          path: sbom.spdx.json
+          retention-days: 14
