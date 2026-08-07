@@ -1,5 +1,9 @@
 # ventura.build
 
+![EPL-2.0](https://img.shields.io/github/license/chamseddinehiddoud/ventura.build)
+![stars](https://img.shields.io/github/stars/chamseddinehiddoud/ventura.build)
+![forks](https://img.shields.io/github/forks/chamseddinehiddoud/ventura.build)
+
 Versão **Ventura** do clássico *build-your-own-x* — aprenda construindo: guia
 curado de projetos para recriar ferramentas famosas do zero, com uma skill de
 replay determinístico para executar cada construção em etapas.
