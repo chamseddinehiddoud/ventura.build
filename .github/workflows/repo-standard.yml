@@ -1,4 +1,4 @@
-name: Ventura Repository Standard
+name: Ventura Repository Security Baseline
 
 on:
   workflow_call:

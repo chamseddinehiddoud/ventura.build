@@ -1,18 +1,32 @@
 # ventura.build
 
-![Status](https://img.shields.io/badge/status-curation%20%2B%20skill-blueviolet)
+![Status](https://img.shields.io/badge/status-engineering%20platform-blueviolet)
 ![License](https://img.shields.io/github/license/venturalabs-ai/ventura.build)
 ![Stars](https://img.shields.io/github/stars/venturalabs-ai/ventura.build)
 
-**Curadoria de projetos “build it yourself” para aprender sistemas construindo versões mínimas de ferramentas reais.**
+**Plataforma compartilhada de engenharia do ecossistema Ventura, com workflows reutilizáveis de higiene, segurança, SBOM e validação de skills, além de trilhas educacionais “build it yourself”.**
 
 ## Classificação
 
-**Curation / Skill Repository.** Este repositório organiza trilhas e métodos próprios; não distribui implementações de projetos de terceiros como se fossem originais.
+**Engineering Platform + Curation / Skill Repository.** Este repositório mantém o baseline compartilhado de segurança e governança consumido por outros repositórios Ventura e também organiza trilhas educacionais próprias.
+
+O workflow reutilizável `.github/workflows/repo-standard.yml` é um **Repository Security Baseline**. Ele não substitui testes funcionais específicos de cada projeto e não deve, isoladamente, ser apresentado como evidência de que uma aplicação é production-grade.
+
+## Baseline compartilhado
+
+O baseline central executa, quando aplicável:
+
+- higiene básica do repositório;
+- validação estrutural de Agent Skills e manifestos de conectores;
+- Trivy bloqueante para vulnerabilidades corrigíveis HIGH/CRITICAL;
+- upload SARIF;
+- geração e retenção de SBOM SPDX.
+
+Projetos executáveis continuam responsáveis por seus próprios gates de lint, testes, coverage, integração, build, performance e outros controles específicos do domínio.
 
 ## Referência upstream
 
-Inspirado por coleções educacionais como `build-your-own-x`. Consulte os projetos e tutoriais originais para conteúdo upstream.
+A parte educacional é inspirada por coleções públicas como `build-your-own-x`. Consulte projetos e tutoriais originais para conteúdo upstream e respeite suas licenças.
 
 ## Trilhas
 
@@ -35,7 +49,8 @@ Cada construção deve começar com uma versão mínima funcional, testes e etap
 - não copiar código upstream sem respeitar licença;
 - documentar decisões próprias;
 - comparar resultados com referências públicas;
-- manter cada etapa executável.
+- manter cada etapa executável;
+- separar claramente baseline de repositório de quality gates específicos do produto.
 
 ## Licença
 
